@@ -5,8 +5,9 @@ open import PropUniverses
 open import Proposition.Identity
 open import Proposition.Decidable
 open import Function
+import Logic as L
 open import Data.Nat
-open import Data.List hiding (_++_)
+open import Data.List
 open import Data.Collection
   hiding (_⊆_) renaming (_∈_ to _is-mem_; _∉_ to _is-not-mem_)
 
@@ -22,14 +23,17 @@ data Variable : 𝒰₀ ˙ where
 
 variable v v' v″ : Variable
 
-pattern w₀ = 𝑤 0
-pattern w₁ = 𝑤 1
-pattern w₂ = 𝑤 2
-pattern w₃ = 𝑤 3
-pattern v₀ = 𝑣 0
-pattern v₁ = 𝑣 1
-pattern v₂ = 𝑣 2
-pattern v₃ = 𝑣 3
+instance
+  DeicdableName== : Decidable (w == w')
+  DeicdableVariable== : Decidable (v == v')
+
+DeicdableName== {𝑤 n} {𝑤 m} with decide (n == m)
+DeicdableName== | true n==m = true (ap 𝑤 n==m)
+DeicdableName== | false ¬n==m = false λ { (refl (𝑤 n)) → ¬n==m (refl n)}
+
+DeicdableVariable== {𝑣 n} {𝑣 m} with decide (n == m)
+DeicdableVariable== | true n==m = true (ap 𝑣 n==m)
+DeicdableVariable== | false ¬n==m = false λ { (refl (𝑣 n)) → ¬n==m (refl n)}
 
 -- auxiliary structure
 
@@ -50,65 +54,22 @@ module VariableVariable where
     x x' x″ y y' y″ z z' z″ : ident i
 open VariableVariable
 
-instance
-  DeicdableName== : Decidable (w == w')
-  DeicdableVariable== : Decidable (v == v')
-  DeicdableIdent== : {x y : ident i} → Decidable (x == y)
-
-DeicdableName== {𝑤 n} {𝑤 m} with decide (n == m)
-DeicdableName== | true n==m = true (ap 𝑤 n==m)
-DeicdableName== | false ¬n==m = false λ { (refl (𝑤 n)) → ¬n==m (refl n)}
-
-DeicdableVariable== {𝑣 n} {𝑣 m} with decide (n == m)
-DeicdableVariable== | true n==m = true (ap 𝑣 n==m)
-DeicdableVariable== | false ¬n==m = false λ { (refl (𝑣 n)) → ¬n==m (refl n)}
-
-DeicdableIdent== {name} = DeicdableName==
-DeicdableIdent== {var} = DeicdableVariable==
-
-open import Logic
-  renaming (⟶ to —>) hiding (_,_)
-
-postulate
-  _∈_ : (x : ident i)(y : ident j) → 𝒰₀ ᵖ
+infix 135 _∈_ _≡_
+infix 118 ¬_
+infixl 117 _∧_
+infixl 115 _∨_
+infixr 113 A_,_ ∃_,_
+data Formula : 𝒰₀ ˙ where
+  _∈_ : (x : ident i)(y : ident j) → Formula
+  _≡_ : (x : ident i)(y : ident j) → Formula
+  _∨_ : (ϕ ψ : Formula) → Formula
+  _∧_ : (ϕ ψ : Formula) → Formula
+  ¬_ : (ϕ : Formula) → Formula
+  A_,_ : (v : Variable)(ϕ : Formula) → Formula
+  ∃_,_ : (v : Variable)(ϕ : Formula) → Formula
 
 variable
-  ϕ ϕ' ϕ″ ψ ψ' ψ″ θ θ' θ″ : 𝒰₀ ᵖ
-
-data is-formula : (ϕ : 𝒰₀ ᵖ) → 𝒰₁ ˙
-
-open import Type.Sum hiding (_,_)
-
-Formula = Σ λ ϕ → is-formula ϕ
-
-free : (ϕ : Formula) → List (ident i)
-
-data is-formula where
-  ∈-formula  : {x : ident i}{y : ident j} → is-formula (x ∈ y)
-  ==-formula : {x : ident i}{y : ident j} → is-formula (x == y)
-  ∨-formula :
-    (p : is-formula ϕ)
-    (q : is-formula ψ)
-    → --------------------
-    is-formula (ϕ ∨ ψ)
-  ∧-formula :
-    (p : is-formula ϕ)
-    (q : is-formula ψ)
-    → --------------------
-    is-formula (ϕ ∧ ψ)
-  ¬-formula :
-    (p : is-formula ϕ)
-    → --------------------
-    is-formula (¬ ϕ)
-  ∀-formula :
-    (v : Variable)
-    (p : is-formula ϕ)
-    → --------------------
-    is-formula ϕ
-  ∃-formula : {ϕ : Variable → 𝒰₀ ᵖ}
-    (p : ∀ v → is-formula (ϕ v))
-    → --------------------
-    is-formula (∃ λ v → ϕ v)
+  ϕ ϕ' ϕ″ ψ ψ' ψ″ θ θ' θ″ : Formula
 
 private
   get-idents : (u : ident i) → List (ident j)
@@ -118,77 +79,112 @@ get-idents {name}{var} u = ∅
 get-idents {var}{name} u = ∅
 get-idents {var}{var} u = [ u ]
 
-open import Data.Collection.Listable.Function
-
-free' : (p : is-formula ϕ) → List (ident i)
-free' (∈-formula {x = x}{y}) = get-idents x ++ get-idents y
-free' (==-formula {x = x}{y}) = get-idents x ++ get-idents y
-free' (∨-formula p p₁) = free' p ++ free' p₁
-free' (∧-formula p p₁) = free' p ++ free' p₁
-free' (¬-formula p) = free' p
--- hacks, try to make nicer
-free' {i = name} (∀-formula v p) = {!!} -- free' (p v₀)
-free'  {i = var} (∀-formula v p) = {!!}
-  -- if v₀ is-mem free' (p v₁)
-  --   then free' (p v₀)
-  --   else remove v₀ (free' (p v₀))
-free' {i = name} (∃-formula p) = free' (p v₀)
-free'  {i = var} (∃-formula p) =
-  if v₀ is-mem free' (p v₁)
-    then free' (p v₀)
-    else remove v₀ (free' (p v₀))
-
-free (ϕ Σ., p) = remove-duplicates (free' p)
+free : (ϕ : Formula) → List (ident i)
+free (u ∈ u') = get-idents u ++ get-idents u'
+free (u ≡ u') = get-idents u ++ get-idents u'
+free (ϕ ∧ ψ) = free ϕ ++ free ψ
+free (ϕ ∨ ψ) = free ϕ ++ free ψ
+free (¬ ϕ) = free ϕ
+free {name}(A _ , ϕ) = free ϕ
+free  {var}(A v , ϕ) = remove v (free ϕ)
+free {name}(∃ _ , ϕ) = free ϕ
+free  {var}(∃ v , ϕ) = remove v (free ϕ)
 
 sentence : (ϕ : Formula) → 𝒰₀ ᵖ
 sentence ϕ = ∀ (v : Variable) → v is-not-mem free ϕ
 
-infix 135 _F∈_ _F==_
-_F∈_ _F==_ : (x : ident i)(y : ident j) → Formula
-x F∈ y = (x ∈ y) Σ., ∈-formula
-x F== y = (x == y) Σ., ==-formula
+infixl 114 _⟷_ _⟶_
+_⟶_ _⟷_ : (ϕ ψ : Formula) → Formula
+ϕ ⟶ ψ = ¬ ψ ∨ ϕ
+ϕ ⟷ ψ = (ψ ⟶ ϕ) ∧ (ϕ ⟶ ψ)
 
-infix 117 _F∧_
-infix 115 _F∨_
-_F∨_ _F∧_ : (ϕ ψ : Formula) → Formula
-(ϕ Σ., p) F∨ (ψ Σ., q) = (ϕ ∨ ψ) Σ., ∨-formula p q
-(ϕ Σ., p) F∧ (ψ Σ., q) = (ϕ ∧ ψ) Σ., ∧-formula p q
+open import Type.Sum hiding (_,_)
+open import Data.Nat.Operation
+open import Data.Functor
+open import Data.Monad
+open import Data.List.Functor
 
-infix 118 F¬_
-F¬_ : (ϕ : Formula) → Formula
-F¬ (ϕ Σ., p) = (¬ ϕ) Σ., ¬-formula p
+new-var : (l : List (Σ λ i → ident i)) → Variable
+new-var =
+  𝑣 ∘
+  freshℕ ∘
+  fmap (λ {(𝑣 n) → n}) ∘
+  join ∘
+  fmap (get-idents {j = var} ∘ pr₂)
 
-infix 113 Formula∀ Formula∃ Formula∃!
-Formula∀ Formula∃ Formula∃! : (ϕ : Variable → Formula) → Formula
+infix 135 _⊆_ _≡⋃_ _≡｛_｝ _≡｛_,_｝ _≡⦅_,_⦆ _≡_∪_
+_⊆_ : (x : ident i)(y : ident j) → Formula
+x ⊆ y = A vₙ , vₙ ∈ x ⟶ vₙ ∈ y
+  where vₙ = new-var [ mk-Σ-implicit x ⸴ mk-Σ-implicit y ]
 
-Formula∀ ϕ = {!!} -- (∀ v → pr₁ (ϕ v)) Σ., ∀-formula (λ v → pr₂ (ϕ v))
-Formula∃ ϕ = (∃ λ v → pr₁ (ϕ v)) Σ., ∃-formula (λ v → pr₂ (ϕ v))
+_≡⋃_ : (x : ident i)(y : ident j) → Formula
+x ≡⋃ y = A vₙ , vₙ ∈ x ⟷ (∃ vₘ , vₙ ∈ vₘ ∧ vₘ ∈ y)
+  where [x,y] = [ mk-Σ-implicit x ⸴ mk-Σ-implicit y ]
+        vₙ = new-var [x,y]
+        vₘ = new-var (mk-Σ-implicit vₙ ∷ [x,y])
 
-syntax Formula∀ (λ v → ϕ) = F∀ v , ϕ
-syntax Formula∃ (λ v → ϕ) = F∃ v , ϕ
+_≡｛_｝ : (x : ident i)(y : ident j) → Formula
+x ≡｛ y ｝ = A vₙ , vₙ ∈ x ⟷ vₙ ≡ y
+  where vₙ = new-var [ mk-Σ-implicit x ⸴ mk-Σ-implicit y ]
 
-infixl 114 _F↔_ _F→_
-_F→_ _F↔_ : (ϕ ψ : Formula) → Formula
-ϕ F→ ψ = F¬ ϕ F∨ ψ
-ϕ F↔ ψ = (ψ F→ ϕ) F∧ (ϕ F→ ψ)
+_≡｛_,_｝ : (x : ident i)(y : ident i')(z : ident i″) → Formula
+x ≡｛ y , z ｝ = A vₙ , vₙ ∈ x ⟷ vₙ ≡ y ∨ vₙ ≡ z
+  where vₙ = new-var [ mk-Σ-implicit x ⸴ mk-Σ-implicit y ⸴ mk-Σ-implicit z ]
 
-Formula∃! ϕ = F∃ v , ϕ v F∧ (F∀ w , ϕ w F→ w F== v)
-syntax Formula∃! (λ v → ϕ) = F∃! v , ϕ
+_≡⦅_,_⦆ : (x : ident i)(y : ident i')(z : ident i″) → Formula
+x ≡⦅ y , z ⦆ = A vₙ , vₙ ∈ x ⟷ vₙ ≡｛ y ｝ ∨ vₙ ≡｛ y , z ｝
+  where vₙ = new-var [ mk-Σ-implicit x ⸴ mk-Σ-implicit y ⸴ mk-Σ-implicit z ]
 
-infix 135 _F⊆_ _F==⋃_ _F==｛_｝ _F==｛_,_｝ _F==⦅_,_⦆ _F==_∪_
-_F⊆_ _F==⋃_ _F==｛_｝ : (x : ident i)(y : ident j) → Formula
+_≡_∪_ : (x : ident i)(y : ident i')(z : ident i″) → Formula
+x ≡ y ∪ z = A vₙ , vₙ ∈ x ⟷ vₙ ∈ y ∧ vₙ ∈ z
+  where vₙ = new-var [ mk-Σ-implicit x ⸴ mk-Σ-implicit y ⸴ mk-Σ-implicit z ]
 
-x F⊆ y = F∀ v , v F∈ x F→ v F∈ y
-x F==⋃ y = F∀ vₙ , vₙ F∈ x F↔ (F∃ vₘ , vₙ F∈ vₘ F∧ vₘ F∈ y)
-x F==｛ y ｝ = F∀ vₙ , vₙ F∈ x F↔ vₙ F== y
+private
+  rep-two :
+    (x₁ : ident i)
+    (x₂ : ident i')
+    (rel : ∀ {i}{j}(x : ident i)(y : ident j) → Formula)
+    (x : ident i″)
+    (v : Variable)
+    → -----------
+    Formula
 
-_F==｛_,_｝ _F==⦅_,_⦆ _F==_∪_ : (x : ident i)(y : ident i')(z : ident i″) → Formula
+rep-two {name}{name} x₁ x₂ rel x v = rel x₁ x₂
+rep-two {name} {var} x₁ x₂ rel x v =
+  if x₂ == v
+    then rel x₁ x
+    else rel x₁ x₂
+rep-two  {var}{name} x₁ x₂ rel x v =
+  if x₁ == v
+    then rel x x₂
+    else rel x₁ x₂
+rep-two  {var} {var} x₁ x₂ rel x v =
+  if x₁ == v
+    then if x₂ == v
+      then rel x x
+      else rel x x₂
+    else if x₂ == v
+      then rel x₁ x
+      else rel x₁ x₂
 
-x F==｛ y , z ｝ = F∀ vₙ , vₙ F∈ x F↔ vₙ F== y F∨ vₙ F== z
-x F==⦅ y , z ⦆ = F∀ vₙ , vₙ F∈ x F↔ vₙ F==｛ y ｝ F∨ vₙ F==｛ y , z ｝
-x F== y ∪ z = F∀ vₙ , vₙ F∈ x F↔ vₙ F∈ y F∧ vₙ F∈ z
+infixl 136 _[_/_]
+_[_/_] : (ϕ : Formula)(x : ident i)(v : Variable) → Formula
+(x₁ ∈ y) [ x / v ] = rep-two x₁ y _∈_ x v
+(x₁ ≡ y) [ x / v ] = rep-two x₁ y _≡_ x v
+(ϕ ∨ ψ) [ x / v ] = ϕ [ x / v ] ∨ ψ [ x / v ] 
+(ϕ ∧ ψ) [ x / v ] = ϕ [ x / v ] ∧ ψ [ x / v ] 
+(¬ ϕ) [ x / v ] = ¬ ϕ [ x / v ]
+(A v₁ , ϕ) [ x / v ] =
+  if v₁ == v
+    then A v₁ , ϕ
+    else A v₁ , ϕ [ x / v ]
+(∃ v₁ , ϕ) [ x / v ] =
+  if v₁ == v
+    then ∃ v₁ , ϕ
+    else ∃ v₁ , ϕ [ x / v ]
 
-infix 135 ｛_｝F∈_ ｛_｝F==_
-｛_｝F∈_ ｛_｝F==_ : (x : ident i)(y : ident j) → Formula
-｛ x ｝F∈ y = F∃ v , (F∀ w , w F∈ v F↔ w F== x) F∧ v F∈ y
-｛ x ｝F== y = F∃ v , (F∀ w , w F∈ v F↔ w F== x) F∧ v F== y
+infixr 113 ∃!_,_
+∃!_,_ : (v : Variable)(ϕ : Formula) → Formula
+∃! v , ϕ = ∃ v , ϕ ∧ (A vₙ , ϕ [ vₙ / v ] ⟶ vₙ ≡ v)
+  where vₙ : Variable
+        vₙ = new-var (mk-Σ-implicit v ∷ fmap (var Σ.,_) (free ϕ))
