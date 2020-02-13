@@ -28,6 +28,14 @@ data is-formula : (ϕ : 𝒰₀ ᵖ) → 𝒰₁ ᵖ where
     (q : is-formula ψ)
     → --------------------
     is-formula (ϕ ∧ ψ)
+  -- modification to the traditional formulation of ZFC
+  -- because → cannot be defined
+  -- in terms of ¬ and ∨ in constructive setting
+  →-formula :
+    (p : is-formula ϕ)
+    (q : is-formula ψ)
+    → --------------------
+    is-formula (ϕ → ψ)
   ¬-formula :
     (p : is-formula ϕ)
     → --------------------
@@ -45,7 +53,7 @@ data is-formula : (ϕ : 𝒰₀ ᵖ) → 𝒰₁ ᵖ where
 
 infix 11 _⟶_ _⟷_
 _⟶_ _⟷_ : (ϕ ψ : 𝒰₀ ᵖ) → 𝒰₀ ᵖ
-ϕ ⟶ ψ = ¬ ϕ ∨ ψ
+ϕ ⟶ ψ = ϕ → ψ
 ϕ ⟷ ψ = (ϕ ⟶ ψ) ∧ (ψ ⟶ ϕ)
 
 ⟶-formula :
@@ -53,7 +61,7 @@ _⟶_ _⟷_ : (ϕ ψ : 𝒰₀ ᵖ) → 𝒰₀ ᵖ
   (q : is-formula ψ)
   → ------------------
   is-formula (ϕ ⟶ ψ)
-⟶-formula p q = ∨-formula (¬-formula p) q
+⟶-formula = →-formula
 
 ⟷-formula :
   (p : is-formula ϕ)

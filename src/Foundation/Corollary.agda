@@ -35,4 +35,4 @@ pair-exact a b | ∅ , _ with 𝒫-exact ∅
 pair-exact a b | _ | 𝒫[∅] , p =
   {!F.replacement (λ X x y → (x F.==∅ F.∧ y F.== a) F.∨ (x F.≠∅ F.∧ y F.== b)) 𝒫[∅]!}
   where p' : forall-∈ 𝒫[∅] (λ x → ∃! λ (y : set) → (x ==∅ ∧ y == a ∨ x ≠∅ ∧ y == b))
-        p' x = {!p x!}
+        p' x x∈𝒫[∅] = {!⟵ (p x) x∈𝒫[∅]!}
