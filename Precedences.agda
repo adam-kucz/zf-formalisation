@@ -2,14 +2,7 @@ module Precedences where
 
 -- Terms (150 - 100)
 
-infix 135 _F==_ _F∈_ _F⊆_ _F==⋃_ _F==｛_｝ _F==｛_,_｝ _F==⦅_,_⦆ _F==_∪_ -- LAST
-infix 118 F¬_ -- LAST
-infixl 117 _F∧_ -- LAST
-infixl 115 _F∨_ -- LAST
-infixl 114 _F→_ -- LAST
-infixl 114 _F↔_ -- LAST
-infixr 113 F∀_,_ -- LAST
-infixr 113 F∃_,_ -- LAST
+infix 135 _∈_ _∉_ _⊆_ -- Axiom
 
 -- Types (60 - 50)
 
@@ -20,6 +13,9 @@ infixr 113 F∃_,_ -- LAST
 -- Equalities (19)
 
 -- Logic (18 - 10)
+
+infixl 11 ∃_∈_,_ ⋀_∈_,_ -- Axiom
+infix 11 _⟶_ _⟷_ -- Axiom
 
 -- Proof (10 - 5)
 
