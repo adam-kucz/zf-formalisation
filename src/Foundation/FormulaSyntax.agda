@@ -42,7 +42,7 @@ exists-∈ x ϕ = ∃ λ y → y ∈ x ∧ ϕ y
 forall-∈ x ϕ = A λ y → y ∈ x ⟶ ϕ y
 
 infixl 11 exists-∈ forall-∈
-syntax exists-∈ x (λ y → ϕ) = ∃ y ∈ x , ϕ
+syntax exists-∈ x (λ y → ϕ) = ⋁ y ∈ x , ϕ
 syntax forall-∈ x (λ y → ϕ) = ⋀ y ∈ x , ϕ
 
 infix 135 _∉_ _⊆_
@@ -52,7 +52,7 @@ x ⊆ y = ⋀ z ∈ x , z ∈ y
 disjoint x y = A λ z → ¬ (z ∈ x ∧ z ∈ y)
 
 _==∅ _≠∅ : (x : set) → Formula
-x ==∅ = ∃ λ y → y ∉ x
+x ==∅ = A λ y → y ∉ x
 x ≠∅ = ¬ x ==∅
 
 separation :
@@ -67,7 +67,7 @@ replacement :
   (ϕ : (X x y : set) → Formula) →
   ∀ X (p : Axiom.⋀ x ∈ X , L.∃! λ y → elem (ϕ X x y))
   → ----------------------------------------
-  L.∃ λ Y → Axiom.⋀ x ∈ X , Axiom.∃ y ∈ Y , elem (ϕ X x y)
+  L.∃ λ Y → Axiom.⋀ x ∈ X , Axiom.⋁ y ∈ Y , elem (ϕ X x y)
 replacement ϕ =
   Axiom.replacement
     (λ X x y → elem (ϕ X x y)) (λ X x y → prop (ϕ X x y))

@@ -67,7 +67,7 @@ exists-∈ x ϕ = ∃ λ y → y ∈ x ∧ ϕ y
 forall-∈ x ϕ = ∀ y → y ∈ x ⟶ ϕ y
 
 infixl 11 exists-∈ forall-∈
-syntax exists-∈ x (λ y → ϕ) = ∃ y ∈ x , ϕ
+syntax exists-∈ x (λ y → ϕ) = ⋁ y ∈ x , ϕ
 syntax forall-∈ x (λ y → ϕ) = ⋀ y ∈ x , ϕ
 
 infix 135 _∉_ _⊆_
@@ -87,11 +87,11 @@ disjoint-formula x y = ∀-formula (λ v →
   ¬-formula (∧-formula (∈-formula v x) (∈-formula v y)))
 
 _==∅ _≠∅ : (x : set) → 𝒰₀ ᵖ
-x ==∅ = ∃ λ y → y ∉ x
+x ==∅ = ∀ y → y ∉ x
 x ≠∅ = ¬ x ==∅
 
 ==∅-formula : (x : set) → is-formula (x ==∅)
-==∅-formula x = ∃-formula (λ v → ∉-formula v x)
+==∅-formula x = ∀-formula (λ v → ∉-formula v x)
 
 ≠∅-formula : (x : set) → is-formula (x ≠∅)
 ≠∅-formula x = ¬-formula (==∅-formula x)
@@ -126,15 +126,13 @@ postulate
     → ------------
     z ∈ 𝒫[x]
 
-private
-  _=S[_] : (y x : set) → 𝒰₀ ᵖ
-
+_=S[_] : (y x : set) → 𝒰₀ ᵖ
 y =S[ x ] = ∀ z → z ∈ y ↔ z ∈ x ∨ z == x
 
 postulate
   ∞-exists :
     ∃ λ x →
-    (∃ λ y → y ∈ x)
+    (∀ y (p : y ==∅) → y ∈ x)
     ∧
     (⋀ y ∈ x , ∀ z (q : z =S[ y ]) → z ∈ x)
 
@@ -143,12 +141,12 @@ postulate
     (p : ∀ X x y → is-formula (ϕ X x y)) →
     ∀ X (p : ⋀ x ∈ X , ∃! λ y → ϕ X x y)
     → ----------------------------------------
-    ∃ λ Y → ⋀ x ∈ X , ∃ y ∈ Y , ϕ X x y
+    ∃ λ Y → ⋀ x ∈ X , ⋁ y ∈ Y , ϕ X x y
 
   foundation :
     ∀ x (p : ∃ λ y → y ∈ x)
     → -------------------------
-    ∃ y ∈ x , ¬ (∃ λ z → z ∈ x ∧ z ∈ y)
+    ⋁ y ∈ x , ¬ (∃ λ z → z ∈ x ∧ z ∈ y)
 
   choice :
     ∀ F (p : ⋀ x ∈ F , x ≠∅ ∧ (⋀ y ∈ F , x == y ∨ disjoint x y))
