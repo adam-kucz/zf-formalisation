@@ -2,6 +2,9 @@ module Precedences where
 
 -- Terms (150 - 100)
 
+infixl 150 _∩_ -- Construction
+infixl 149 _∪_ -- Construction
+infixl 148 _-_ _Δ_ -- Construction
 infix 135 _∈_ _∉_ _⊆_ -- Axiom
 
 -- Types (60 - 50)
