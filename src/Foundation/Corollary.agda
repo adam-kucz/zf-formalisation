@@ -63,27 +63,24 @@ _=≡_ {𝐴 = 𝐴} x _ = ∀ z → z ∈ x ↔ 𝐴 z
 !𝒫[_] : ∀ x → set[ z ∶ z ⊆ x ]
 !𝒫[ x ] = !separate (F._⊆ x) (𝒫-exists x)
 
-open import Axiom.ExcludedMiddle
-
 ∅∈𝒫[x] : ∀ {x 𝒫[x] ∅}
   (p : ∅ ==∅)
   (q : ∀ z → z ∈ 𝒫[x] ↔ z ⊆ x)
   → ------------------------------
   ∅ ∈ 𝒫[x]
-∅∈𝒫[x] {∅ = ∅} p q = ⟵ (q ∅) λ y → ∨left (p y)
+∅∈𝒫[x] {x}{∅ = ∅} p q = ⟵ (q ∅) λ y r → ⊥-recursion (y ∈ x) (p y r)
 
 x∈𝒫[x] : ∀ {x 𝒫[x]}
   (q : ∀ z → z ∈ 𝒫[x] ↔ z ⊆ x)
   → ------------------------------
   x ∈ 𝒫[x]
-x∈𝒫[x] {x} p = ⟵ (p x) λ y → ⟶ classic-→ (λ p → p)
+x∈𝒫[x] {x} p = ⟵ (p x) λ y p → p
 
 !replace : 
   (ϕ : (X x y : set) → F.Formula) →
   ∀ X (p : ∀ x (p' : x ∈ X) → ∃! λ y → elem (ϕ X x y)) → 
   set[ y ∶ (∃ λ x → x ∈ X ∧ elem (ϕ X x y)) ]
-!replace ϕ X fun-ϕ
-  with F.replacement ϕ X (λ y → ⟶ classic-→ (fun-ϕ y))
+!replace ϕ X fun-ϕ with F.replacement ϕ X fun-ϕ
 !replace ϕ X fun-ϕ | rep-superset , _
   with F.separation (λ y → F.⋁ x ∈ X , ϕ X x y) rep-superset
 !replace ϕ X fun-ϕ | rep-superset , p | rep , q =
@@ -91,8 +88,7 @@ x∈𝒫[x] {x} p = ⟵ (p x) λ y → ⟶ classic-→ (λ p → p)
   where rep-prop : ∀ y → y ∈ rep ↔ (∃ λ x → x ∈ X ∧ elem (ϕ X x y))
         ⟶ (rep-prop y) y∈rep = ∧right $ ⟶ (q y) y∈rep
         ⟵ (rep-prop y) (x , (x∈X , ϕ[Xxy]))
-          with ⟵ classic-→ (p x) x∈X
-             | fun-ϕ x x∈X
+          with p x x∈X | fun-ϕ x x∈X
         ⟵ (rep-prop y) p₁@(x , (x∈X , ϕ[Xxy]))
           | y' , (y'∈rep-superset , ϕ[Xxy'])
           | y″ , (ϕ[Xxy″] , uniq-y″)  =
@@ -104,7 +100,14 @@ x∈𝒫[x] {x} p = ⟵ (p x) λ y → ⟶ classic-→ (λ p → p)
                     === y  :by: sym $ uniq-y″ y ϕ[Xxy]
                   qed)
 
+-- construction of pairs is fundamentally non-constructive,
+-- but we can limit non-constructiveness to emptiness checking
 open import Proposition.Decidable
+
+open import Axiom.ExcludedMiddle
+
+is-empty : (x : set) → Decidable (x ==∅)
+is-empty x = excluded-middle (x ==∅)
 
 ![_⸴_] : (a b : set) → set[ y ∶ y == a ∨ y == b ]
 ![ a ⸴ b ] with !∅
@@ -118,7 +121,7 @@ open import Proposition.Decidable
           ∀ x → x ∈ 𝒫²[∅] →
           ∃! λ (y : set) →
           x ==∅ ∧ y == a ∨ x ≠∅ ∧ y == b
-        p' x _ with excluded-middle (x ==∅)
+        p' x _ with is-empty x
         p' x _ | true x==∅ =
             a , (∨left (x==∅ , refl a) ,
             λ { y (∨left (_ , y==a)) → y==a
@@ -143,7 +146,7 @@ open import Proposition.Decidable
         [a,b]-prop y y∈[a,b] | _ , (_ , ∨left (_ , y==a)) = ∨left y==a
         [a,b]-prop y y∈[a,b] | _ , (_ , ∨right (_ , y==b)) = ∨right y==b
         𝟙≠∅ : 𝟙 ≠∅
-        𝟙≠∅ p = p ∅ $ ⟵ (𝟙-def ∅) λ y → ∨left $ ∅-def y
+        𝟙≠∅ p = p ∅ $ ⟵ (𝟙-def ∅) λ _ p → p
         ∅∈𝟚 : ∅ ∈ 𝟚
         ∅∈𝟚 = ∅∈𝒫[x] ∅-def 𝟚-def
         𝟙∈𝟚 : 𝟙 ∈ 𝟚
@@ -166,8 +169,7 @@ open import Operation.Binary
 !⋃ X | ⋃-sup , p =
   !separate
     (λ z → F.⋁ y ∈ X , z F.∈ y)
-    (⋃-sup , λ { z (y , (y∈X , z∈y)) →
-                   ⟵ classic-→ (⟵ classic-→ (p y) y∈X z) z∈y})
+    (⋃-sup , λ { z (y , (y∈X , z∈y)) → p y y∈X z z∈y})
 
 -- !∞ : RecPropSet λ ∞ z → z ==∅ ∨ (∃ λ y → z =S[ y ] ∧ y ∈ ∞)
 -- !∞ with ∞-exists

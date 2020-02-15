@@ -51,28 +51,20 @@ data is-formula : (ϕ : 𝒰₀ ᵖ) → 𝒰₁ ᵖ where
     → --------------------
     is-formula (∃ λ v → ϕ v)
 
-infix 11 _⟶_ _⟷_
-_⟶_ _⟷_ : (ϕ ψ : 𝒰₀ ᵖ) → 𝒰₀ ᵖ
-ϕ ⟶ ψ = ϕ → ψ
-ϕ ⟷ ψ = (ϕ ⟶ ψ) ∧ (ψ ⟶ ϕ)
-
-⟶-formula :
-  (p : is-formula ϕ)
-  (q : is-formula ψ)
-  → ------------------
-  is-formula (ϕ ⟶ ψ)
-⟶-formula = →-formula
+infix 11 _⟷_
+_⟷_ : (ϕ ψ : 𝒰₀ ᵖ) → 𝒰₀ ᵖ
+ϕ ⟷ ψ = (ϕ → ψ) ∧ (ψ → ϕ)
 
 ⟷-formula :
   (p : is-formula ϕ)
   (q : is-formula ψ)
   → ------------------
   is-formula (ϕ ⟷ ψ)
-⟷-formula p q = ∧-formula (⟶-formula p q) (⟶-formula q p)
+⟷-formula p q = ∧-formula (→-formula p q) (→-formula q p)
 
 exists-∈ forall-∈ : (x : set)(ϕ : set → 𝒰₀ ᵖ) → 𝒰₀ ᵖ
 exists-∈ x ϕ = ∃ λ y → y ∈ x ∧ ϕ y
-forall-∈ x ϕ = ∀ y → y ∈ x ⟶ ϕ y
+forall-∈ x ϕ = ∀ y → y ∈ x → ϕ y
 
 infixl 11 exists-∈ forall-∈
 syntax exists-∈ x (λ y → ϕ) = ⋁ y ∈ x , ϕ
@@ -88,7 +80,7 @@ disjoint x y = ∀ z → ¬ (z ∈ x ∧ z ∈ y)
 ∉-formula x y = ¬-formula (∈-formula x y)
 
 ⊆-formula : (x y : set) → is-formula (x ⊆ y)
-⊆-formula x y = ∀-formula (λ v → ⟶-formula (∈-formula v x) (∈-formula v y))
+⊆-formula x y = ∀-formula (λ v → →-formula (∈-formula v x) (∈-formula v y))
 
 disjoint-formula : (x y : set) → is-formula (disjoint x y)
 disjoint-formula x y = ∀-formula (λ v →

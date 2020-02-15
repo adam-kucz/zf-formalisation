@@ -34,7 +34,7 @@ A ϕ = (∀ v → elem (ϕ v)) , ∀-formula (λ v → prop (ϕ v))
 
 infix 11 _⟶_ _⟷_
 _⟶_ _⟷_ : (ϕ ψ : Formula) → Formula
-ϕ ⟶ ψ = ¬ ϕ ∨ ψ
+(ϕ , p) ⟶ (ψ , q) = (ϕ → ψ) , →-formula p q
 ϕ ⟷ ψ = (ϕ ⟶ ψ) ∧ (ψ ⟶ ϕ)
 
 exists-∈ forall-∈ : (x : set)(ϕ : set → Formula) → Formula

@@ -1,7 +1,10 @@
 module Precedences where
 
--- Terms (150 - 100)
+-- Terms (200 - 100)
 
+infixl 170 _^_ -- Construction
+infixr 165 ⋃_ ⋂_ -- Construction
+infixl 160 _×_ -- Construction
 infixl 150 _∩_ -- Construction
 infixl 149 _∪_ -- Construction
 infixl 148 _-_ _Δ_ -- Construction
