@@ -30,7 +30,7 @@ PropSet 𝐴 = RecPropSet (λ _ → 𝐴)
 
 syntax PropSet (λ z → 𝑋) = set[ z ∶ 𝑋 ]
 
-import Logic.Property
+import Logic.Proof
 
 prop-set : ∀ x (𝐴 : set → 𝒰 ᵖ)
   (p : ∀ z → z ∈ x ↔ 𝐴 z)
@@ -104,10 +104,13 @@ x∈𝒫[x] {x} p = ⟵ (p x) λ y p → p
 -- but we can limit non-constructiveness to emptiness checking
 open import Proposition.Decidable
 
-open import Axiom.ExcludedMiddle
+private
+  module Classical where
+    open import Axiom.ExcludedMiddle
 
-is-empty : (x : set) → Decidable (x ==∅)
-is-empty x = excluded-middle (x ==∅)
+    is-empty : (x : set) → Decidable (x ==∅)
+    is-empty x = excluded-middle (x ==∅)
+open Classical
 
 ![_⸴_] : (a b : set) → set[ y ∶ y == a ∨ y == b ]
 ![ a ⸴ b ] with !∅
@@ -153,6 +156,7 @@ is-empty x = excluded-middle (x ==∅)
         𝟙∈𝟚 = x∈𝒫[x] 𝟚-def
 
 open import Operation.Binary
+open import Logic.Property
 
 ![_] : (a : set) → set[ y ∶ y == a ]
 ![ a ] with ![ a ⸴ a ]

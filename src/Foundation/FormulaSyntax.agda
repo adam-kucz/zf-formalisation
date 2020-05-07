@@ -6,11 +6,13 @@ open import Foundation.Axiom as Axiom
   using (is-formula; set)
 open is-formula
 
-open import Proposition.Identity renaming (_==_ to _eq_)
+open import Proposition.Identity
+  renaming (_==_ to _eq_; _≠_ to _neq_)
 open import Proposition.Sum using (Σₚ; _,_; elem; prop)
 import Logic as L
 
 Formula = Σₚ is-formula
+holds = elem
 
 infix 135 _∈_
 infix 19 _==_
@@ -32,7 +34,8 @@ A_ ∃_ : (ϕ : set → Formula) → Formula
 A ϕ = (∀ v → elem (ϕ v)) , ∀-formula (λ v → prop (ϕ v))
 ∃ ϕ = (L.∃ λ v → elem (ϕ v)) , ∃-formula (λ v → prop (ϕ v))
 
-infix 11 _⟶_ _⟷_
+infixr 11 _⟶_
+infix 11 _⟷_
 _⟶_ _⟷_ : (ϕ ψ : Formula) → Formula
 (ϕ , p) ⟶ (ψ , q) = (ϕ → ψ) , →-formula p q
 ϕ ⟷ ψ = (ϕ ⟶ ψ) ∧ (ψ ⟶ ϕ)
@@ -45,8 +48,10 @@ infixl 11 exists-∈ forall-∈
 syntax exists-∈ x (λ y → ϕ) = ⋁ y ∈ x , ϕ
 syntax forall-∈ x (λ y → ϕ) = ⋀ y ∈ x , ϕ
 
+infix 19 _≠_
 infix 135 _∉_ _⊆_
-_∉_ _⊆_ disjoint : (x y : set) → Formula
+_≠_ _∉_ _⊆_ disjoint : (x y : set) → Formula
+x ≠ y = ¬ x == y
 x ∉ y = ¬ x ∈ y
 x ⊆ y = ⋀ z ∈ x , z ∈ y
 disjoint x y = A λ z → ¬ (z ∈ x ∧ z ∈ y)
