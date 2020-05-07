@@ -2,7 +2,6 @@
 module Foundation.Corollary where
 
 open import Foundation.Axiom as Axiom
-import Foundation.FormulaSyntax as F
 
 open import PropUniverses
 open import Proposition.Identity hiding (refl)
@@ -13,7 +12,7 @@ open import Proof
 !∅ : ∃! λ x → x ==∅
 !∅ with ∞-exists
 !∅ | ∞ , _
-  with F.separation (λ x → F.¬ x F.== x) ∞
+  with separation (λ x → ¬ x == x) ∞
 !∅ | _ | ∅ , p =
   ∅ , (∉∅ ,
     λ ∅' ∉∅' → set-ext ∅' ∅ λ y →
@@ -39,29 +38,22 @@ prop-set : ∀ x (𝐴 : set → 𝒰 ᵖ)
 prop-set x 𝐴 p = x , (p , λ y p₁ → set-ext y x λ z →
   proof z ∈ y
     〉 _↔_ 〉 𝐴 z   :by: p₁ z
-    〉 _↔_ 〉 z ∈ x :by: strong-sym (p z)
+    〉 _↔_ 〉 z ∈ x :by: isym (p z)
   qed)
 
-_=≡_ : {𝐴 : set → 𝒰 ᵖ}
-  (x : set)
-  (y : PropSet 𝐴)
-  → ------------------------
-  𝒰 ᵖ
-_=≡_ {𝐴 = 𝐴} x _ = ∀ z → z ∈ x ↔ 𝐴 z
-
 !separate :
-  (ϕ : set → F.Formula)
-  (p : ∃ λ x → ∀ z → elem (ϕ z) → z ∈ x)
+  (ϕ : set → 𝒰 ᵖ)
+  (p : ∃ λ x → ∀ z → ϕ z → z ∈ x)
   → ---------------------------------
-  set[ z ∶ elem (ϕ z) ]
-!separate ϕ (x , _) with F.separation ϕ x
-!separate ϕ (x , p) | x' , p' = prop-set x' (λ z → elem (ϕ z)) ∈x'
-  where ∈x' : ∀ z → z ∈ x' ↔ elem (ϕ z)
+  set[ z ∶ ϕ z ]
+!separate ϕ (x , _) with separation ϕ x
+!separate ϕ (x , p) | x' , p' = prop-set x' ϕ ∈x'
+  where ∈x' : ∀ z → z ∈ x' ↔ ϕ z
         ⟶ (∈x' z) q = ∧right $ ⟶ (p' z) q
         ⟵ (∈x' z) q = ⟵ (p' z) (p z q , q)
 
 !𝒫[_] : ∀ x → set[ z ∶ z ⊆ x ]
-!𝒫[ x ] = !separate (F._⊆ x) (𝒫-exists x)
+!𝒫[ x ] = !separate (_⊆ x) (𝒫-exists x)
 
 ∅∈𝒫[x] : ∀ {x 𝒫[x] ∅}
   (p : ∅ ==∅)
@@ -77,15 +69,15 @@ x∈𝒫[x] : ∀ {x 𝒫[x]}
 x∈𝒫[x] {x} p = ⟵ (p x) λ y p → p
 
 !replace : 
-  (ϕ : (X x y : set) → F.Formula) →
-  ∀ X (p : ∀ x (p' : x ∈ X) → ∃! λ y → elem (ϕ X x y)) → 
-  set[ y ∶ (∃ λ x → x ∈ X ∧ elem (ϕ X x y)) ]
-!replace ϕ X fun-ϕ with F.replacement ϕ X fun-ϕ
+  (ϕ : (X x y : set) → 𝒰 ᵖ) →
+  ∀ X (p : ∀ x (p' : x ∈ X) → ∃! λ y → ϕ X x y) → 
+  set[ y ∶ (∃ λ x → x ∈ X ∧ ϕ X x y) ]
+!replace ϕ X fun-ϕ with replacement ϕ X fun-ϕ
 !replace ϕ X fun-ϕ | rep-superset , _
-  with F.separation (λ y → F.⋁ x ∈ X , ϕ X x y) rep-superset
+  with separation (λ y → ⋁ x ∈ X , ϕ X x y) rep-superset
 !replace ϕ X fun-ϕ | rep-superset , p | rep , q =
-  prop-set rep (λ y → ∃ λ x → x ∈ X ∧ elem (ϕ X x y)) rep-prop
-  where rep-prop : ∀ y → y ∈ rep ↔ (∃ λ x → x ∈ X ∧ elem (ϕ X x y))
+  prop-set rep (λ y → ∃ λ x → x ∈ X ∧ ϕ X x y) rep-prop
+  where rep-prop : ∀ y → y ∈ rep ↔ ∃ λ x → x ∈ X ∧ ϕ X x y
         ⟶ (rep-prop y) y∈rep = ∧right $ ⟶ (q y) y∈rep
         ⟵ (rep-prop y) (x , (x∈X , ϕ[Xxy]))
           with p x x∈X | fun-ϕ x x∈X
@@ -118,7 +110,7 @@ open Classical
 ![ a ⸴ b ] | _ | 𝒫[∅] , _ with !𝒫[ 𝒫[∅] ]
 ![ a ⸴ b ] | _ | _ | 𝒫²[∅] , p
   with !replace
-    (λ X x y → (x F.==∅ F.∧ y F.== a) F.∨ (x F.≠∅ F.∧ y F.== b))
+    (λ X x y → (x ==∅ ∧ y == a) ∨ (x ≠∅ ∧ y == b))
     𝒫²[∅] p'
   where p' :
           ∀ x → x ∈ 𝒫²[∅] →
@@ -140,9 +132,9 @@ open Classical
   prop-set [a,b]
     (λ y → y == a ∨ y == b)
     (λ y → [a,b]-prop y ,
-           λ { (∨left (Id.refl a)) →
+           λ { (∨left (Id-refl a)) →
                  ⟵ ([a,b]-def a) (∅ , (∅∈𝟚 , ∨left (∅-def , refl a)))
-             ; (∨right (Id.refl b)) →
+             ; (∨right (Id-refl b)) →
                ⟵ ([a,b]-def b) (𝟙 , (𝟙∈𝟚 , ∨right (𝟙≠∅ , refl b)))})
   where [a,b]-prop : ∀ y (p : y ∈ [a,b]) → y == a ∨ y == b
         [a,b]-prop y y∈[a,b] with ⟶ ([a,b]-def y) y∈[a,b]
@@ -172,10 +164,18 @@ open import Logic.Property
 !⋃ X with ⋃-exists X
 !⋃ X | ⋃-sup , p =
   !separate
-    (λ z → F.⋁ y ∈ X , z F.∈ y)
+    (λ z → ⋁ y ∈ X , z ∈ y)
     (⋃-sup , λ { z (y , (y∈X , z∈y)) → p y y∈X z z∈y})
 
 -- !∞ : RecPropSet λ ∞ z → z ==∅ ∨ (∃ λ y → z =S[ y ] ∧ y ∈ ∞)
 -- !∞ with ∞-exists
--- !∞ | ∞ , p = {!!separate !}
+-- !∞ | ∞ , p = {!separation (λ x → )!}
 
+-- ∃! λ ∞ → ∀ z → z ∈ ∞ ↔ (z ==∅ ∨ (∃ λ y → z =S[ y ] ∧ y ∈ ∞))
+
+-- separation :
+--     ∀ (ϕ : set → 𝒰 ᵖ)
+--     x →
+--     ∃ λ y →
+--     ∀ u →
+--     u ∈ y ↔ u ∈ x ∧ ϕ u

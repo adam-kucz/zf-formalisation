@@ -10,59 +10,7 @@ postulate
   set : 𝒰₀ ˙
   _∈_ : (x y : set) → 𝒰₀ ᵖ
 
-open import Data.Nat
-
-variable
-  ϕ ϕ' ϕ″ ψ ψ' ψ″ θ θ' θ″ : 𝒰₀ ᵖ
-
-data is-formula : (ϕ : 𝒰₀ ᵖ) → 𝒰₁ ᵖ where
-  ∈-formula  : ∀ x y → is-formula (x ∈ y)
-  ==-formula : ∀ (x y : set) → is-formula (x == y)
-  ∨-formula :
-    (p : is-formula ϕ)
-    (q : is-formula ψ)
-    → --------------------
-    is-formula (ϕ ∨ ψ)
-  ∧-formula :
-    (p : is-formula ϕ)
-    (q : is-formula ψ)
-    → --------------------
-    is-formula (ϕ ∧ ψ)
-  -- modification to the traditional formulation of ZFC
-  -- because → cannot be defined
-  -- in terms of ¬ and ∨ in constructive setting
-  →-formula :
-    (p : is-formula ϕ)
-    (q : is-formula ψ)
-    → --------------------
-    is-formula (ϕ → ψ)
-  ¬-formula :
-    (p : is-formula ϕ)
-    → --------------------
-    is-formula (¬ ϕ)
-  ∀-formula :
-    {ϕ : set → 𝒰₀ ᵖ}
-    (p : ∀ v → is-formula (ϕ v))
-    → --------------------
-    is-formula (∀ v → ϕ v)
-  ∃-formula :
-    {ϕ : set → 𝒰₀ ᵖ}
-    (p : ∀ v → is-formula (ϕ v))
-    → --------------------
-    is-formula (∃ λ v → ϕ v)
-
-infix 11 _⟷_
-_⟷_ : (ϕ ψ : 𝒰₀ ᵖ) → 𝒰₀ ᵖ
-ϕ ⟷ ψ = (ϕ → ψ) ∧ (ψ → ϕ)
-
-⟷-formula :
-  (p : is-formula ϕ)
-  (q : is-formula ψ)
-  → ------------------
-  is-formula (ϕ ⟷ ψ)
-⟷-formula p q = ∧-formula (→-formula p q) (→-formula q p)
-
-exists-∈ forall-∈ : (x : set)(ϕ : set → 𝒰₀ ᵖ) → 𝒰₀ ᵖ
+exists-∈ forall-∈ : (x : set)(ϕ : set → 𝒰 ᵖ) → 𝒰 ᵖ
 exists-∈ x ϕ = ∃ λ y → y ∈ x ∧ ϕ y
 forall-∈ x ϕ = ∀ y → y ∈ x → ϕ y
 
@@ -76,25 +24,9 @@ x ∉ y = ¬ x ∈ y
 x ⊆ y = ⋀ z ∈ x , z ∈ y
 disjoint x y = ∀ z → ¬ (z ∈ x ∧ z ∈ y)
 
-∉-formula : (x y : set) → is-formula (x ∉ y)
-∉-formula x y = ¬-formula (∈-formula x y)
-
-⊆-formula : (x y : set) → is-formula (x ⊆ y)
-⊆-formula x y = ∀-formula (λ v → →-formula (∈-formula v x) (∈-formula v y))
-
-disjoint-formula : (x y : set) → is-formula (disjoint x y)
-disjoint-formula x y = ∀-formula (λ v →
-  ¬-formula (∧-formula (∈-formula v x) (∈-formula v y)))
-
 _==∅ _≠∅ : (x : set) → 𝒰₀ ᵖ
 x ==∅ = ∀ y → y ∉ x
 x ≠∅ = ¬ x ==∅
-
-==∅-formula : (x : set) → is-formula (x ==∅)
-==∅-formula x = ∀-formula (λ v → ∉-formula v x)
-
-≠∅-formula : (x : set) → is-formula (x ≠∅)
-≠∅-formula x = ¬-formula (==∅-formula x)
 
 postulate
   set-ext :
@@ -104,9 +36,8 @@ postulate
     x == y
 
   separation :
-    (ϕ : set → 𝒰₀ ᵖ)
-    (p : ∀ v → is-formula (ϕ v)) →
-    ∀ x →
+    ∀ (ϕ : set → 𝒰 ᵖ)
+    x →
     ∃ λ y →
     ∀ u →
     u ∈ y ↔ u ∈ x ∧ ϕ u
@@ -137,9 +68,8 @@ postulate
     (⋀ y ∈ x , ∀ z (q : z =S[ y ]) → z ∈ x)
 
   replacement :
-    (ϕ : (X x y : set) → 𝒰₀ ᵖ)
-    (p : ∀ X x y → is-formula (ϕ X x y)) →
-    ∀ X (p : ⋀ x ∈ X , ∃! λ y → ϕ X x y)
+    ∀ (ϕ : (X x y : set) → 𝒰 ᵖ)
+    X (p : ⋀ x ∈ X , ∃! λ y → ϕ X x y)
     → ----------------------------------------
     ∃ λ Y → ⋀ x ∈ X , ⋁ y ∈ Y , ϕ X x y
 

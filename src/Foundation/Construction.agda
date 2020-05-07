@@ -1,12 +1,12 @@
 {-# OPTIONS --prop --exact-split #-}
 module Foundation.Construction where
 
-open import Foundation.Axiom
-open import Foundation.FormulaSyntax as F using (Formula)
-open import Foundation.Corollary as Cor hiding (∅∈𝒫[x]; x∈𝒫[x])
+open import Foundation.Axiom hiding (step)
+open import Foundation.Corollary as Cor hiding (∅∈𝒫[x]; x∈𝒫[x]; step)
 
+open import PropUniverses hiding (X; Y; Z; W)
 open import Proposition.Sum
-open import Logic
+open import Logic hiding (∨[_⸴_]; step)
 
 open import Axiom.UniqueChoice
 
@@ -15,28 +15,28 @@ open import Axiom.UniqueChoice
 ∅-def = ∧left (prop (!choice !∅))
 
 separate :
-  (ϕ : set → Formula)
-  (p : ∃ λ x → ∀ z → F.holds (ϕ z) → z ∈ x)
+  (ϕ : set → 𝒰 ᵖ)
+  (p : ∃ λ x → ∀ z → ϕ z → z ∈ x)
   → ---------------------------------
   set
 separate ϕ p = elem (!choice (!separate ϕ p))
 separate-def = λ ϕ p → ∧left (prop (!choice (!separate ϕ p)))
 
-subset : (X : set)(ϕ : set → Formula) → set
+subset : (X : set)(ϕ : set → 𝒰 ᵖ) → set
 subset X ϕ =
-  separate (λ x → x F.∈ X F.∧ ϕ x) (X , λ {_ (x∈X , _) → x∈X})
+  separate (λ x → x ∈ X ∧ ϕ x) (X , λ {_ (x∈X , _) → x∈X})
 
-subset-def : ∀ X ϕ x → x ∈ subset X ϕ ↔ x ∈ X ∧ F.holds (ϕ x)
+subset-def : ∀ X ϕ x → x ∈ subset X ϕ ↔ x ∈ X ∧ ϕ x
 subset-def X ϕ =
-  separate-def (λ x → x F.∈ X F.∧ ϕ x) (X , λ {_ (x∈X , _) → x∈X})
+  separate-def (λ x → x ∈ X ∧ ϕ x) (X , λ {_ (x∈X , _) → x∈X})
 
-open import Proof
+open import Proof hiding (step)
 
 subset⊆ : ∀ X ϕ → subset X ϕ ⊆ X
 subset⊆ X ϕ x x∈subset = ∧left $ ⟶ (subset-def X ϕ x) x∈subset
 
 replace : 
-  (ϕ : (X x y : set) → F.Formula) →
+  (ϕ : (X x y : set) → 𝒰 ᵖ) →
   ∀ X (p : ⋀ x ∈ X , ∃! λ y → elem (ϕ X x y)) → 
   set
 replace ϕ X fun-ϕ = elem (!choice (!replace ϕ X fun-ϕ))
@@ -46,9 +46,9 @@ replace-def = λ ϕ X fun-ϕ → ∧left (prop (!choice (!replace ϕ X fun-ϕ)))
 [ a ⸴ b ] = elem (!choice ![ a ⸴ b ])
 [_⸴_]-def = λ a b → ∧left (prop (!choice ![ a ⸴ b ]))
 
-open import Operation.Binary
-open import Logic.Property
-open import Logic.Proof
+open import Operation.Binary hiding (step)
+open import Logic.Property hiding (step; ∨[_⸴_])
+open import Logic.Proof hiding (step; ∨[_⸴_])
 
 instance
   Commutative-pairing : Commutative [_⸴_]
@@ -65,9 +65,11 @@ comm ⦃ Commutative-pairing ⦄ x y =
 [ x ] = elem (!choice ![ x ])
 [_]-def = λ x → ∧left (prop (!choice ![ x ]))
 
-open import PropUniverses hiding (X; Y; Z; W)
-open import Relation.Binary.Property hiding (_⊆_)
-open import Function.Proof
+open import PropUniverses hiding (X; Y; Z; W; step)
+open import Relation.Binary.Property using
+  ( Irreflexive; Reflexive; Transitive; Antisymmetric
+  ; irrefl; refl; trans; antisym; step)
+open import Function.Proof hiding (step)
 
 instance
   Postfix∈[-] : UniversalPostfix [_] _∈_
@@ -79,8 +81,8 @@ instance
 
   Composable∈⊆ : Composable 𝒰₀ _∈_ _⊆_
 
-module Composable⊆ where
-  open TransMakeComposable _⊆_ public
+-- module Composable⊆ where
+--   open TransMakeComposable _⊆_ public
 module Composable∈ where
   open MakeComposable _∈_ public
 
@@ -91,7 +93,7 @@ irrefl ⦃ Irreflexive∈ ⦄ x x∈x
 irrefl ⦃ Irreflexive∈ ⦄ x x∈x
   | z , (z∈[x] , ¬y∈z) with ⟶ ([ x ]-def z) z∈[x]
 irrefl ⦃ Irreflexive∈ ⦄ x x∈x
-  | x , (_ , ¬y∈[x]) | Id.refl .x = ¬y∈[x] (x , (postfix [_] x , x∈x))
+  | x , (_ , ¬y∈[x]) | Id-refl .x = ¬y∈[x] (x , (postfix [_] x , x∈x))
 
 refl ⦃ Reflexive⊆ ⦄ _ _ p = p
 trans ⦃ Transitive⊆ ⦄ x⊆y y⊆z w w∈x = y⊆z w (x⊆y w w∈x)
@@ -113,8 +115,8 @@ instance
 
 UniversalPostfix.postfix Postfix∈𝒫[-] x = Cor.x∈𝒫[x] 𝒫[ x ]-def
 
-open import Proposition.Identity hiding (refl)
-open import Proposition.Proof
+open import Proposition.Identity hiding (refl; step)
+open import Proposition.Proof hiding (step)
 
 variable
   a b c d : set
@@ -128,13 +130,13 @@ variable
           have b ∈ [ a ⸴ b ] :from: ⟵ ([ a ⸴ b ]-def b) (∨right (refl b))
             ⟶ b ∈ [ a ⸴ c ] :by: Id.coe $ ap (b ∈_) p
 ⟶ [⸴]-== p | ∨right q = q
-⟶ ([⸴]-== {a}{a}{c}) p | ∨left (Id.refl a) =
+⟶ ([⸴]-== {a}{a}{c}) p | ∨left (Id-refl a) =
   have c ∈ [ a ⸴ c ]    :from: ⟵ ([ a ⸴ c ]-def c) (∨right (refl c))
     ⟶ c ∈ [ a ⸴ a ]    :by: Id.coe $ ap (c ∈_) $ sym p
     ⟶ c == a ∨ c == a :by: ⟶ ([ a ⸴ a ]-def c)
     ⟶ c == a           :by: Id.coe $ idemp (c == a)
     ⟶ a == c           :by: sym
-⟵ ([⸴]-== {a}) (Id.refl b) = refl [ a ⸴ b ]
+⟵ ([⸴]-== {a}) (Id-refl b) = refl [ a ⸴ b ]
 
 [⸴]-≠ : ∀ a b → [ a ⸴ b ] ≠ a
 [⸴]-≠ a b p = irrefl a $
@@ -146,7 +148,7 @@ variable
 
 ⟦⸴⟧-== : 
   ⟦ a ⸴ b ⟧ == ⟦ c ⸴ d ⟧ ↔ a == c ∧ b == d
-⟵ ⟦⸴⟧-== (Id.refl a , Id.refl b) = refl ⟦ a ⸴ b ⟧
+⟵ ⟦⸴⟧-== (Id-refl a , Id-refl b) = refl ⟦ a ⸴ b ⟧
 ⟶ (⟦⸴⟧-== {a}{b}{c}{d}) p
   with ⟶ (p' a) (∨left (refl a))
      | ⟶ (p' [ a ⸴ b ]) (∨right (refl [ a ⸴ b ]))
@@ -157,38 +159,38 @@ variable
             〉 _==_ 〉 x ∈ ⟦ c ⸴ d ⟧          :by: ap (x ∈_) p
             〉 _↔_ 〉 x == c ∨ x == [ c ⸴ d ] :by: ⟦ c ⸴ d ⟧-def x
           qed
-⟶ (⟦⸴⟧-== {a}{b}{c}{d}) p | ∨left (Id.refl a) | ∨left q =
+⟶ (⟦⸴⟧-== {a}{b}{c}{d}) p | ∨left (Id-refl a) | ∨left q =
   ⊥-recursion (a == a ∧ b == d) ([⸴]-≠ a b q)
-⟶ ⟦⸴⟧-== p | ∨left (Id.refl a) | ∨right q =
+⟶ ⟦⸴⟧-== p | ∨left (Id-refl a) | ∨right q =
   refl a , ⟶ [⸴]-== q
 ⟶ (⟦⸴⟧-== {.([ c ⸴ d ])} {b} {c} {d}) p
-  | ∨right (Id.refl .([ c ⸴ d ]))
+  | ∨right (Id-refl .([ c ⸴ d ]))
   | ∨left [[c⸴d]⸴b]==c =
   ⊥-recursion ([ c ⸴ d ] == c ∧ b == d) contr
   where contr : ⊥
         contr with foundation ⟦ c ⸴ d ⟧
           (c , ⟵ (⟦ c ⸴ d ⟧-def c) (∨left (refl c)))
         contr | z , (z∈⟦c,d⟧ , min-∈) with ⟶ (⟦ c ⸴ d ⟧-def z) z∈⟦c,d⟧
-        contr | c , (_ , min-∈) | ∨left (Id.refl _) =
+        contr | c , (_ , min-∈) | ∨left (Id-refl _) =
           min-∈ ([ c ⸴ d ] , (
             ⟵ (⟦ c ⸴ d ⟧-def [ c ⸴ d ]) (∨right (refl [ c ⸴ d ])) , (
             have [ c ⸴ d ] ∈ [ [ c ⸴ d ] ⸴ b ]
               :from: ⟵ ([ [ c ⸴ d ] ⸴ b ]-def [ c ⸴ d ]) (∨left (refl [ c ⸴ d ]))
             ⟶ [ c ⸴ d ] ∈ c :by: Id.coe (ap ([ c ⸴ d ] ∈_) [[c⸴d]⸴b]==c))))
-        contr | .([ c ⸴ d ]) , (_ , min-∈) | ∨right (Id.refl _) =
+        contr | .([ c ⸴ d ]) , (_ , min-∈) | ∨right (Id-refl _) =
           min-∈ (c , (⟵ (⟦ c ⸴ d ⟧-def c) (∨left (refl c)) ,
                       ⟵ ([ c ⸴ d ]-def c) (∨left (refl c))))
 ⟶ (⟦⸴⟧-== {.([ c ⸴ d ])} {b} {c} {d}) p
-  | ∨right (Id.refl .([ c ⸴ d ]))
+  | ∨right (Id-refl .([ c ⸴ d ]))
   | ∨right [[c,d],b]==[c,d] =
   ⊥-recursion ([ c ⸴ d ] == c ∧ b == d) ([⸴]-≠ [ c ⸴ d ] b [[c,d],b]==[c,d])
 
 infixl 150 _∩_
 _∩_ : (x y : set) → set
-x ∩ y = separate (λ z → z F.∈ x F.∧ z F.∈ y)
+x ∩ y = separate (λ z → z ∈ x ∧ z ∈ y)
                  (x , λ {z (z∈x , _) → z∈x})
 _∩_-def : (x y : set) → ∀ z → z ∈ x ∩ y ↔ z ∈ x ∧ z ∈ y
-x ∩ y -def = separate-def (λ z → z F.∈ x F.∧ z F.∈ y)
+x ∩ y -def = separate-def (λ z → z ∈ x ∧ z ∈ y)
                           (x , λ {z (z∈x , _) → z∈x})
 
 instance
@@ -209,7 +211,7 @@ comm ⦃ Commutative-∩ ⦄ x y = set-ext (x ∩ y) (y ∩ x) λ z →
     〉 _↔_ 〉  z ∈ y ∩ x      :by: sym $ (y ∩ x -def) z
   qed
 
-open import Axiom.PropositionExtensionality
+open import Axiom.PropositionExtensionality hiding (step)
 
 assoc ⦃ Associative-∩ ⦄ x y z = set-ext (x ∩ (y ∩ z)) (x ∩ y ∩ z) λ w →
   proof w ∈ x ∩ (y ∩ z)
@@ -227,20 +229,20 @@ assoc ⦃ Associative-∩ ⦄ x y z = set-ext (x ∩ (y ∩ z)) (x ∩ y ∩ z) 
 
 infixl 148 _-_
 _-_ : (x y : set) → set
-x - y = subset x (λ z → F.¬ z F.∈ y)
+x - y = subset x (λ z → ¬ z ∈ y)
 _-_-def : (x y : set) → ∀ z → z ∈ x - y ↔ z ∈ x ∧ ¬ z ∈ y
-x - y -def = subset-def x (λ z → F.¬ z F.∈ y)
+x - y -def = subset-def x (λ z → ¬ z ∈ y)
 
-open import Axiom.FunctionExtensionality
+open import Axiom.FunctionExtensionality hiding (step)
 
 infixr 175 ⋂
 ⋂ : ∀ X (p : x ∈ X) → set
 ⋂ {x} X x∈X =
-  separate (λ z → F.⋀ y ∈ X , z F.∈ y)
+  separate (λ z → ⋀ y ∈ X , z ∈ y)
            (x , λ _ p → p x x∈X)
 ⋂-def : ∀ X {x} (p : x ∈ X) → ∀ z → z ∈ ⋂ X p ↔ ∀ x → x ∈ X → z ∈ x
 ⋂-def X {x} p =
-  separate-def (λ z → F.⋀ y ∈ X , z F.∈ y)
+  separate-def (λ z → ⋀ y ∈ X , z ∈ y)
                (x , λ _ q → q x p)
 
 infixr 175 ⋃_
@@ -263,8 +265,8 @@ _∪_-def : ∀ x y → ∀ z → z ∈ x ∪ y ↔ z ∈ x ∨ z ∈ y
       :by: step
   qed
   where step : ∃ (λ w → (w == x ∨ w == y) ∧ z ∈ w) ↔ z ∈ x ∨ z ∈ y
-        ⟶ step (x , (∨left (Id.refl x) , z∈x)) = ∨left z∈x 
-        ⟶ step (y , (∨right (Id.refl y) , z∈y)) = ∨right z∈y
+        ⟶ step (x , (∨left (Id-refl x) , z∈x)) = ∨left z∈x 
+        ⟶ step (y , (∨right (Id-refl y) , z∈y)) = ∨right z∈y
         ⟵ step (∨left p) = x , (∨left (refl x) , p)
         ⟵ step (∨right q) = y , (∨right (refl y) , q)
 
@@ -316,7 +318,7 @@ x Δ y = (x - y) ∪ (y - x)
 
 open import Proposition.BinarySum
 
-pair-∈-𝒫 : ∀ {X Y x y}
+pair-∈-𝒫 : {X Y x y : set}
   (p : x ∈ X)
   (q : y ∈ Y)
   → ---------------------
@@ -324,8 +326,8 @@ pair-∈-𝒫 : ∀ {X Y x y}
 pair-∈-𝒫 {X}{Y}{x}{y} p q =
   ⟵ (𝒫[ X ∪ Y ]-def [ x ⸴ y ]) λ z z∈[x,y] →
   ⟵ ((X ∪ Y -def) z) $
-  ∨-recursion (λ { (Id.refl .x) → ∨left p})
-              (λ { (Id.refl .y) → ∨right q}) $
+  ∨-recursion (λ { (Id-refl .x) → ∨left p})
+              (λ { (Id-refl .y) → ∨right q}) $
   ⟶ ([ x ⸴ y ]-def z) z∈[x,y]
 
 ordered-pair-∈-𝒫² : ∀ {X Y x y}
@@ -341,9 +343,9 @@ private
     Cor.set[ u ∶ (∃ λ x → ∃ λ y → u == ⟦ x ⸴ y ⟧ ∧ x ∈ X ∧ y ∈ Y) ]
 
 X !× Y = !separate
-  (λ u → F.∃ λ x → F.∃ λ y → u F.== ⟦ x ⸴ y ⟧ F.∧ x F.∈ X F.∧ y F.∈ Y)
+  (λ u → ∃ λ x → ∃ λ y → u == ⟦ x ⸴ y ⟧ ∧ x ∈ X ∧ y ∈ Y)
   (𝒫[ X ∪ 𝒫[ X ∪ Y ] ] ,
-   λ {.(⟦ x' ⸴ y' ⟧) (x' , (y' , (Id.refl _ , x'∈X , y'∈Y))) →
+   λ {.(⟦ x' ⸴ y' ⟧) (x' , (y' , (Id-refl _ , x'∈X , y'∈Y))) →
         ordered-pair-∈-𝒫² x'∈X y'∈Y})
 
 infixl 160 _×_
@@ -354,7 +356,7 @@ _×_-def : ∀ X Y →
   ∀ z →
   z ∈ X × Y ↔ ∃ λ x → ∃ λ y → z == ⟦ x ⸴ y ⟧ ∧ x ∈ X ∧ y ∈ Y
 ⟶ ((X × Y -def) z) p = ⟶ (∧left (prop (!choice (X !× Y))) z) p
-⟵ ((X × Y -def) z) (x , (y , (Id.refl _ , x∈X , y∈Y))) =
+⟵ ((X × Y -def) z) (x , (y , (Id-refl _ , x∈X , y∈Y))) =
   ⟵ (∧left (prop (!choice (X !× Y))) ⟦ x ⸴ y ⟧)
     (x , (y , (refl _ , x∈X , y∈Y)))
 
@@ -366,15 +368,15 @@ X -^- 0 = 𝒫[ ∅ ]
 X -^- 1 = X
 X -^- (m +2) = X -^- (m +1) × X
 
-is-_[_]-tuple : (m : ℕ)(p : 1 < m)(x : set) → Formula
+is-_[_]-tuple : (m : ℕ)(p : 1 < m)(x : set) → 𝒰 ᵖ
 is- 1 [ p ]-tuple x with s<s→-<- p
 ... | ()
-is- 2 [ p ]-tuple x = F.∃ λ u → F.∃ λ v → x F.== ⟦ u ⸴ v ⟧
-is- m +3 [ _ ]-tuple x = F.∃ λ u → F.∃ λ v →
-  x F.== ⟦ u ⸴ v ⟧ F.∧ is- m +2 [ ap suc z<s ]-tuple u
+is- 2 [ p ]-tuple x = ∃ λ u → ∃ λ v → x == ⟦ u ⸴ v ⟧
+is- m +3 [ _ ]-tuple x = ∃ λ u → ∃ λ v →
+  x == ⟦ u ⸴ v ⟧ ∧ is- m +2 [ ap suc z<s ]-tuple u
 
 Rel : (m : ℕ)(p : 1 < m) → 𝒰₀ ˙
-Rel m p = Σₚ λ R → elem (F.⋀ x ∈ R , is- m [ p ]-tuple x )
+Rel m p = Σₚ λ R → elem (⋀ x ∈ R , is- m [ p ]-tuple x )
 
 RelOn : (m : ℕ)(X : set) → 𝒰₀ ˙
 RelOn m X = Σₚ λ R → R ⊆ X -^- m
@@ -382,8 +384,8 @@ RelOn m X = Σₚ λ R → R ⊆ X -^- m
 BinRel : 𝒰₀ ˙
 BinRel = Rel 2 (ap suc z<s)
 
-is-bin-rel : (R : set) → Formula
-is-bin-rel R = F.⋀ x ∈ R , is- 2 [ ap suc z<s ]-tuple x
+is-bin-rel : (R : set) → 𝒰 ᵖ
+is-bin-rel R = ⋀ x ∈ R , is- 2 [ ap suc z<s ]-tuple x
 
 variable
   R : BinRel
@@ -393,7 +395,7 @@ private
   ran' : (R : set) → Cor.set[ v ∶ (∃ λ u → ⟦ u ⸴ v ⟧ ∈ R) ]
 
 dom' R =
-  !separate (λ u → F.∃ λ v → ⟦ u ⸴ v ⟧ F.∈ R) (⋃ R , p)
+  !separate (λ u → ∃ λ v → ⟦ u ⸴ v ⟧ ∈ R) (⋃ R , p)
   where p : ∀ u (p : ∃ λ v → ⟦ u ⸴ v ⟧ ∈ R) → u ∈ ⋃ R
         p u (v , [u,v]∈R) =
           ⟵ (⋃-def R u)
@@ -408,7 +410,7 @@ dom-def : ∀ R z → z ∈ dom R ↔ ∃ λ v → ⟦ z ⸴ v ⟧ ∈ R
 dom-def R = ∧left (prop (!choice (dom' R)))
 
 ran' R =
-  !separate (λ v → F.∃ λ u → ⟦ u ⸴ v ⟧ F.∈ R ) (⋃ ⋃ R , p)
+  !separate (λ v → ∃ λ u → ⟦ u ⸴ v ⟧ ∈ R ) (⋃ ⋃ R , p)
   where p : ∀ v (p : ∃ λ u → ⟦ u ⸴ v ⟧ ∈ R) → v ∈ ⋃ ⋃ R
         p v (u , [u,v]∈R) =
           ⟵ (⋃-def (⋃ R) v) ([ u ⸴ v ] ,
@@ -426,11 +428,11 @@ ran-def R = ∧left (prop (!choice (ran' R)))
 field-of : (R : set) → set
 field-of R = dom R ∪ ran R
 
-is-function : (f : set) → Formula
-is-function f = is-bin-rel f F.∧ F.A λ x → F.A λ y → F.A λ z →
-  ⟦ x ⸴ y ⟧ F.∈ f F.⟶
-  ⟦ x ⸴ z ⟧ F.∈ f F.⟶
-  y F.== z
+is-function : (f : set) → 𝒰 ᵖ
+is-function f = is-bin-rel f ∧ A λ x → A λ y → A λ z →
+  ⟦ x ⸴ y ⟧ ∈ f ⟶
+  ⟦ x ⸴ z ⟧ ∈ f ⟶
+  y == z
 
 Function = Σₚ λ f → elem (is-function f)
 
@@ -439,16 +441,16 @@ open import Proposition.Decidable
 module Classical where
   open import Axiom.ExcludedMiddle
 
-  formula-decidable : (ϕ : Formula) → Decidable (F.holds ϕ)
-  formula-decidable ϕ = excluded-middle (F.holds ϕ)
+  formula-decidable : (ϕ : 𝒰 ᵖ) → Decidable (holds ϕ)
+  formula-decidable ϕ = excluded-middle (holds ϕ)
 open Classical
 
 value-of_at_ : (f x : set) → set
 value-of f at x = elem (!choice p')
   where p' : ∃! λ v →
-          F.holds ((is-function f F.∧ x F.∈ dom f F.⟶ ⟦ x ⸴ v ⟧ F.∈ f) F.∧
-                   (F.¬ (is-function f F.∧ x F.∈ dom f) F.⟶ v F.== ∅))
-        p' with formula-decidable (is-function f F.∧ x F.∈ dom f)
+          holds ((is-function f ∧ x ∈ dom f ⟶ ⟦ x ⸴ v ⟧ ∈ f) ∧
+                   (¬ (is-function f ∧ x ∈ dom f) ⟶ v == ∅))
+        p' with formula-decidable (is-function f ∧ x ∈ dom f)
         p' | true (rel , uniq , x∈dom-f) with ⟶ (dom-def f x) x∈dom-f
         p' | true q@(rel , uniq , x∈dom-f) | v , p = v , (
           (λ _ → p) ,
@@ -459,8 +461,8 @@ value-of f at x = elem (!choice p')
           (λ _ → refl ∅) ,
           λ _ p → ∧right p ¬p)
 
-_∶_⟶_ : (f X Y : set) → Formula
-f ∶ X ⟶ Y = is-function f F.∧ dom f F.== X F.∧ ran f F.⊆ Y
+_∶_⟶_ : (f X Y : set) → 𝒰 ᵖ
+f ∶ X ⟶ Y = is-function f ∧ dom f == X ∧ ran f ⊆ Y
 
 infixl 170 _^_
 _^_ : (Y X : set) → set
@@ -474,7 +476,7 @@ Y ^ X = separate (λ f → f ∶ X ⟶ Y) (𝒫[ X × Y ] , p)
                   ∃ λ x → ∃ λ y →
                   [x,y] == ⟦ x ⸴ y ⟧ ∧ x ∈ X ∧ y ∈ Y
                 q [x,y] [x,y]∈f with f-rel [x,y] [x,y]∈f
-                q .(⟦ x ⸴ y ⟧) [x,y]∈f | x , (y , Id.refl _) = x , (y , (
+                q .(⟦ x ⸴ y ⟧) [x,y]∈f | x , (y , Id-refl _) = x , (y , (
                   refl ⟦ x ⸴ y ⟧ ,
                   Id.coe (ap (x ∈_) dom-f==X) $ ⟵ (dom-def f x) (y , [x,y]∈f) ,
                   (proof y
