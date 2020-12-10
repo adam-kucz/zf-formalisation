@@ -1,9 +1,10 @@
 {-# OPTIONS --exact-split #-}
 module Foundation.Function.Base where
 
-open import Foundation.Axiom
+open import Foundation.Axiom renaming (_∘_ to _o_)
 open import Foundation.Pair
-open import Foundation.Product
+open import Foundation.Relation
+
 open import Data.Product
 
 is-set-fun : (f : set) → Set
@@ -16,11 +17,6 @@ _[_] _[_]' : (f u : set) → set
 f [ u ]' = π₂ $ ⋃ ｛ x ∈ f ∣ ∃[ v ] (x ≡ ⟨ u ، v ⟩) ｝
 
 abstract
-  dom ran : (f : set) → set
-  dom f = ｛ u ∈ ⋃ (⋃ f) ∣ ∃[ v ] ⟨ u ، v ⟩ ∈ f ｝
-
-  ran f = ｛ v ∈ ⋃ (⋃ f) ∣ ∃[ u ] ⟨ u ، v ⟩ ∈ f ｝
-
   f [ u ] = f [ u ]'
 
   abs-fun≡ : ∀ f u → f [ u ] ≡ f [ u ]'
@@ -33,7 +29,7 @@ open import Data.Empty
 
 abstract
   fun-∅ : is-set-fun ∅
-  fun-∅ = ⊥-elim ∘ ∈∅ , ⊥-elim ∘ ∈∅
+  fun-∅ = ⊥-elim o ∈∅ , ⊥-elim o ∈∅
   
   fun-｛⟨_،_⟩｝ : ∀ u v → is-set-fun ｛ ⟨ u ، v ⟩ ｝
   fun-｛⟨ u ، v ⟩｝ =
@@ -45,30 +41,6 @@ abstract
             π₂ ⟨ u ، v ⟩ ≡⟨ cong π₂ $ sym $ from ∈｛ ⟨ u ، v ⟩ ｝ xz∈X ⟩
             π₂ ⟨ x ، z ⟩ ≡⟨ π₂⟨ x ، z ⟩ ⟩
             z ∎}
-
-  ∈dom : ∀{f u} → u ∈ dom f ⇔ ∃ λ v → ⟨ u ، v ⟩ ∈ f
-  ∈dom {f}{u} = mk⇔
-    (proj₂ ∘ from ∈dom')
-    (λ {(v , uv∈f) → to ∈dom' $
-      to ∈⋃ (
-        ｛ u ｝ ,
-        to ∈⋃ (⟨ u ، v ⟩ , uv∈f , to ∈⟨,⟩ (inj₁ refl)) ,
-        to ∈｛ u ｝ refl) ,
-      v , uv∈f
-    })
-    where ∈dom' =  ∈｛ u ∈ ⋃ (⋃ f) ∣ ∃[ v ] ⟨ u ، v ⟩ ∈ f ｝
-
-  ∈ran : ∀{f v} → v ∈ ran f ⇔ ∃ λ u → ⟨ u ، v ⟩ ∈ f
-  ∈ran {f}{v} = mk⇔
-    (proj₂ ∘ from ∈ran')
-    (λ {(u , uv∈f) → to ∈ran' $
-      to ∈⋃ (
-        ｛ u ، v ｝ ,
-        to ∈⋃ (⟨ u ، v ⟩ , uv∈f , to ∈⟨,⟩ (inj₂ refl)) ,
-        to ∈｛ u ، v ｝ (inj₂ refl)) ,
-      u , uv∈f
-    })
-    where ∈ran' =  ∈｛ v ∈ ⋃ (⋃ f) ∣ ∃[ u ] ⟨ u ، v ⟩ ∈ f ｝
 
   fun∪ : ∀{f u v} →
     is-set-fun f →
@@ -90,33 +62,6 @@ abstract
            from ⟨,⟩≡ (from ∈uv xy'∈｛uv｝) of λ
       { ((refl , refl) , _ , refl) → refl }}
     where ∈uv = ∈｛ ⟨ u ، v ⟩ ｝
-
-  dom∅ : dom ∅ ≡ ∅
-  dom∅ = antisym-⊆ (⊥-elim ∘ ∈∅ ∘ proj₂ ∘ from ∈dom)
-                   (∅⊆ $ dom ∅)
-
-  dom∪ : ∀ f u v → dom (f ∪ ｛ ⟨ u ، v ⟩ ｝) ≡ dom f ∪ ｛ u ｝
-  dom∪ f u v = antisym-⊆
-    (λ x∈dom[f∪[u]] → case from ∈dom x∈dom[f∪[u]] of λ
-      { (v' , uv∈f∪ ) → case from ∈∪ uv∈f∪ of λ
-        { (inj₁ uv∈f) → to ∈∪ $ inj₁ $ to ∈dom $ v' , uv∈f
-        ; (inj₂ uv∈｛uv｝) →
-          case from ⟨,⟩≡ $ from ∈｛ ⟨ u ، v ⟩ ｝ uv∈｛uv｝ of λ
-          { (refl , _) → to ∈∪ $ inj₂ $ to ∈｛ u ｝ refl}}})
-    (λ x∈dom∪[u] → case from ∈∪ x∈dom∪[u] of λ
-      { (inj₁ x∈domf) → case from ∈dom x∈domf of λ
-        { (v' , uv∈f) → to ∈dom $ v' , to ∈∪ (inj₁ uv∈f)}
-      ; (inj₂ x∈｛u｝) → case from ∈｛ u ｝ x∈｛u｝ of λ
-        { refl → to ∈dom $ v , to ∈∪ (inj₂ $ to ∈｛ ⟨ u ، v ⟩ ｝ refl)}})
-
-  dom｛⟨_,_⟩｝ : ∀ u v → dom ｛ ⟨ u ، v ⟩ ｝ ≡ ｛ u ｝
-  dom｛⟨ u , v ⟩｝ =
-    begin dom ｛ ⟨ u ، v ⟩ ｝ ≡⟨ cong dom $ sym ∅-∪ ⟩
-          dom (∅ ∪ ｛ ⟨ u ، v ⟩ ｝) ≡⟨ dom∪ ∅ u v ⟩
-          dom ∅ ∪ ｛ u ｝ ≡⟨ cong (_∪ ｛ u ｝) dom∅ ⟩
-          ∅ ∪ ｛ u ｝ ≡⟨ ∅-∪ ⟩
-          ｛ u ｝
-    ∎
 
   private
     uv∈f→f[u]≡v : ∀{f}(fun : is-set-fun f){u v}

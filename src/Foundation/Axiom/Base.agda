@@ -31,11 +31,11 @@ postulate
 _∉_ : (x X : set) → Set
 x ∉ X = ¬ (x ∈ X)
 
+infixr 0 ⋀-syntax ⋁-syntax
 ⋀-syntax ⋁-syntax : ∀{l}(X : set)(P : (x : set) → Set l) → Set l
 ⋀-syntax X P = ∀{x}(x∈X : x ∈ X) → P x
 ⋁-syntax X P = ∃[ x ] (x ∈ X ∧ P x)
 
-infixr 0 ⋀-syntax ⋁-syntax
 syntax ⋀-syntax X (λ x → P) = ⋀ x ∈ X , P
 syntax ⋁-syntax X (λ x → P) = ⋁ x ∈ X , P
 

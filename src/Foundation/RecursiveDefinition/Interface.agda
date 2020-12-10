@@ -3,6 +3,7 @@ module Foundation.RecursiveDefinition.Interface where
 
 open import Foundation.RecursiveDefinition.Base
 open import Foundation.Pair
+open import Foundation.Relation hiding (reify)
 open import Foundation.Function
 open import Foundation.Natural
 open import Foundation.Axiom

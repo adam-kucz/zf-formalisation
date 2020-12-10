@@ -2,8 +2,9 @@
 module Foundation.Function.Reification where
 
 open import Foundation.Axiom
-open import Foundation.Function.Base
+open import Foundation.Relation.Base
 open import Foundation.Pair
+open import Foundation.Function.Base
 
 module _ {X}(ϕ : (x y : set) → Set)(!ϕ : ⋀ x ∈ X , ∃! (ϕ x)) where
 

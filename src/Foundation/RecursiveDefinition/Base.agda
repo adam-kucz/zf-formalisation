@@ -3,6 +3,7 @@ module Foundation.RecursiveDefinition.Base where
 
 open import Foundation.Axiom
 open import Foundation.Function
+open import Foundation.Relation
 open import Foundation.Natural.Induction
 open import Foundation.Natural.Literal
 

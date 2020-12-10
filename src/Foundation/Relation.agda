@@ -1,9 +1,6 @@
 {-# OPTIONS --exact-split #-}
 module Foundation.Relation where
 
-open import Foundation.Axiom
-open import Foundation.Pair
-open import Foundation.Product
+open import Foundation.Relation.Base public
+open import Foundation.Relation.Reification public
 
-is-rel-on : (R X Y : set) → Set
-is-rel-on R X Y = R ⊆ X × Y

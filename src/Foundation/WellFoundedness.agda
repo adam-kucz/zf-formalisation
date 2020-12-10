@@ -1,11 +1,17 @@
 {-# OPTIONS --exact-split #-}
 module Foundation.WellFoundedness where
 
-open import Foundation.Axiom.Base
-open import Foundation.Axiom.ZF
-open import Foundation.Axiom.Nonconstructive
+open import Foundation.Axiom
+open import Foundation.Pair
 
-private variable S X : set
+private variable S R X : set
+
+well-founded : (X R : set) → Set
+well-founded X R =
+  ⋀ S ∈ 𝒫 X , (nonempty S →
+  ⋁ x ∈ S , ⋀ y ∈ S , ¬ ⟨ y ، x ⟩ ∈ R)
+
+open import Foundation.Axiom.Nonconstructive
 
 abstract
   ∈-well-founded :
@@ -17,6 +23,7 @@ abstract
   ... | min , min∈S , ¬x∈min-∩-S =
     min , min∈S , λ {x} x∈S x∈min → ¬x∈min-∩-S (x , x∈S , x∈min)
 
+open import Foundation.Relation 
 open import Foundation.Function
 open import Foundation.Natural
 open import Foundation.RecursiveDefinition
@@ -44,8 +51,6 @@ module _ {X} where
                              (subst (n ⁺ ∈_) (sym f-dom) n⁺∈ω , f[x⁺] n∈ω)) ,
          to ∈⋃ (x , x∈v , y∈x)}}}
 
-open import Foundation.Pair
-
 ∈-induction : (P : set → Set) →
   (is : ∀ n → (⋀ k ∈ n , P k) → P n)
   → ----------------------------------------
@@ -71,3 +76,21 @@ open import Foundation.Pair
     {(min∈deep⋃ , ¬Pmin) → ¬Pmin $
     is min λ {k} k∈min → by-contradiction λ ¬Pk →
     ∀k∈S,k∉min (to ∈S (transitive-deep⋃ min∈deep⋃ k∈min , ¬Pk)) k∈min}}}
+
+well-founded-induction :
+  (wf : well-founded X R)
+  (P : set → Set)
+  → ------------------------------
+  (is : ⋀ n ∈ X , (⋀ k ∈ X , (⟨ k ، n ⟩ ∈ R → P k) → P n)) →
+  ⋀ n ∈ X , P n
+well-founded-induction {X}{R} wf P is {x} x∈X = by-contradiction λ ¬Px →
+  let S = ｛ y ∈ X ∣ ¬ P y ｝
+      ∈S = ∈｛ y ∈ X ∣ ¬ P y ｝
+      S⊆X = sep⊆ (¬_ ∘ P) X
+      nonempty-S = inhabited→nonempty $ x , to ∈S (x∈X , ¬Px)
+  in case wf (to ∈𝒫 S⊆X) nonempty-S of λ
+  { (min , min∈S , ¬∃x∈S,x<min) → case from ∈S min∈S of λ
+  { (min∈X , ¬Pmin) → ¬Pmin $
+  is min∈X λ y∈X y<min → by-contradiction λ ¬Py →
+  ¬∃x∈S,x<min (to ∈S $ y∈X , ¬Py) y<min
+  }}
